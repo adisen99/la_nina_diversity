@@ -8,19 +8,8 @@ import pymannkendall as mk
 # detrending and anomaly calculation
 
 def detrend1d_check(arr, period):
-    # if np.nansum(arr) != 0:
-    #     trend = mk.hamed_rao_modification_test(arr).trend
-    # else:
-    #     trend = 'no trend'
-    # if trend != 'no trend':
-    #     res = STL(arr, period = period).fit()
-    #     arr_det = arr - res.trend
-    #     return arr_det
-    # else:
-    #     return arr
     res = STL(arr, period = period).fit()
     arr_det = arr - res.trend
-    # arr_det = detrend(arr, order=2)
     return arr_det
 
 def detrend_separate_check(da, dim, period):
@@ -32,6 +21,13 @@ def detrend_dim(da, dim, deg=1):
     p = da.polyfit(dim=dim, deg=deg)
     fit = xr.polyval(da.coords[dim], p.polyfit_coefficients)
     return da - fit
+
+
+def detrend_rolling_window(da, window_size=15):
+    pad_size=window_size//2
+    padded_data = da.pad(time=(pad_size, pad_size), mode='edge')
+    smoothed_data = padded_data.rolling(time=window_size, center=True).mean('time').isel(time = slice(int(window_size/2),-int(window_size/2)))
+    return da - smoothed_data
 
 
 def calc_anom(
